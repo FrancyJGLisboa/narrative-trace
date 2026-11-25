@@ -109,7 +109,13 @@ For people who are new to code, a scene can carry a line `> Para entender: ...` 
 
 At the end of each finished turn, `story.md` adds up to 3 self-check questions ("Check that you understood") built from the events: what was replaced, whether the check passed, what a concept means. The answer sits in a collapsed block. `quiz.jsonl` holds them.
 
+## Memory across sessions
+
+A note appears once per project, not once per session. The concepts you already met are kept in `.narrative/concepts.json`, next to the session folders. A later session skips them. Rebuilding an old session still gives the same story, because only concepts taught in an earlier session count as known. Delete `concepts.json` to start over.
+
 ## Known limits
+
+- Two sessions that finish at the same moment may both write `concepts.json`. The last write wins and the worst case is one note shown twice.
 
 - The questions test recall of what happened in the session. They do not prove the reader understood why. Only a test with real beginners shows that.
 

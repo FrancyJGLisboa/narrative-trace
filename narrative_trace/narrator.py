@@ -3,7 +3,7 @@ import json
 import os
 import urllib.request
 
-from . import cli_llm, lessons, quiz, store
+from . import cli_llm, lessons, memory, quiz, store
 from .chunker import build_scenes
 from .render import render_story
 from .schema import truncate
@@ -184,7 +184,10 @@ def narrate_turn(d, turn, call=None):
         if llm_enabled() or call is not None:
             todo = [s for s in scenes if (turn, s["n"], tuple(s["seqs"])) not in keep]
             batch = llm_batch(todo, "", lg, call) if todo else {}
+        starts = [e.get("ts") or "" for e in store.read_events(d)]
+        start = min(starts) if starts else ""
         seen = {k for r in others if r.get("turn", 0) < turn for k in r.get("lesson_keys") or []}
+        seen |= memory.known_before(d, start)
         for s in scenes:
             key = (turn, s["n"], tuple(s["seqs"]))
             if key in keep:
@@ -211,6 +214,7 @@ def narrate_turn(d, turn, call=None):
             for r in all_rows:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         os.replace(tmp, path)
+        memory.remember(d, [k for r in rows for k in r.get("lesson_keys") or []], start)
         _save_quiz(d, turn, scenes, rows, lg, any(e.get("kind") == "turn_end" for e in events))
         render_story(d)
     return rows
