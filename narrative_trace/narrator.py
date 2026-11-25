@@ -3,7 +3,7 @@ import json
 import os
 import urllib.request
 
-from . import cli_llm, lessons, store
+from . import cli_llm, lessons, quiz, store
 from .chunker import build_scenes
 from .render import render_story
 from .schema import truncate
@@ -211,8 +211,21 @@ def narrate_turn(d, turn, call=None):
             for r in all_rows:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         os.replace(tmp, path)
+        _save_quiz(d, turn, scenes, rows, lg, any(e.get("kind") == "turn_end" for e in events))
         render_story(d)
     return rows
+
+
+def _save_quiz(d, turn, scenes, rows, lg, finished):
+    path = os.path.join(d, "quiz.jsonl")
+    old = [r for r in store.read_jsonl(path) if r.get("turn") != turn]
+    items = quiz.build_quiz(scenes, rows, lg) if finished else []
+    if items:
+        old.append({"turn": turn, "items": [{"q": q, "a": a} for q, a in items], "lang": lg})
+    with open(path + ".tmp", "w", encoding="utf-8") as f:
+        for r in sorted(old, key=lambda r: r["turn"]):
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    os.replace(path + ".tmp", path)
 
 
 def narrate_all(d, call=None):

@@ -107,7 +107,11 @@ narrative-trace narrate --session-dir .narrative/<id> --all          # rebuild a
 
 For people who are new to code, a scene can carry a line `> Para entender: ...` (`To understand:` in English). It explains one concept in plain words, once per session: reading a file, editing, a command, a test, installing, git, a failure. The texts are written by hand in `narrative_trace/lessons.py`, never by a model, so they cannot invent facts about your session. They explain the idea, not the agent's motive. `NT_LESSONS=off` hides them.
 
+At the end of each finished turn, `story.md` adds up to 3 self-check questions ("Check that you understood") built from the events: what was replaced, whether the check passed, what a concept means. The answer sits in a collapsed block. `quiz.jsonl` holds them.
+
 ## Known limits
+
+- The questions test recall of what happened in the session. They do not prove the reader understood why. Only a test with real beginners shows that.
 
 - The glossary has 9 concepts and is not adaptive. A concept it does not know gets no note.
 
