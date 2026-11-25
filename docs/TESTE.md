@@ -16,7 +16,7 @@ A pessoa acerta pelo menos 1 ponto a mais (de 5) com a história do que com o lo
 ## O que cada pessoa lê
 Duas sessões gravadas do agente, com o mesmo nível de dificuldade. Cada uma tem uma edição e uma falha no meio.
 - **Sessão 1** e **Sessão 2**: grave com Claude Code numa pasta de teste. Congele os arquivos antes do teste.
-- **Condição H (história):** o `story.md` da sessão, com notas e perguntas apagadas das últimas linhas do bloco "Confira se entendeu".
+- **Condição H (história):** o `story.md` da sessão, com as notas "Para entender" mantidas e o bloco "Confira se entendeu" apagado (ele daria as respostas).
 - **Condição L (log):** a lista de eventos do `trace.jsonl` (número, ferramenta, alvo, status), sem texto de narração.
 
 ## Como distribuir (cruzado)
