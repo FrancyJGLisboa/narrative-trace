@@ -102,7 +102,13 @@ narrative-trace narrate --session-dir .narrative/<id> --all          # rebuild a
 
 (From a clone, `python ntrace.py ...` works the same.)
 
+## Learning notes
+
+For people who are new to code, a scene can carry a line `> Para entender: ...` (`To understand:` in English). It explains one concept in plain words, once per session: reading a file, editing, a command, a test, installing, git, a failure. The texts are written by hand in `narrative_trace/lessons.py`, never by a model, so they cannot invent facts about your session. They explain the idea, not the agent's motive. `NT_LESSONS=off` hides them.
+
 ## Known limits
+
+- The glossary has 9 concepts and is not adaptive. A concept it does not know gets no note.
 
 - Scenes quote what an edit changed (before and after, cut to 160 characters, secrets redacted) for Claude Code, Gemini CLI and any harness whose edit payload has old/new strings or file content. Codex patches and Cursor edits show the file name only. The snippets are stored in `trace.jsonl`, which stays on your machine.
 - The LLM narrator may add small claims the events do not hold (for example "that was the only change"). The validator checks file names and reasons, not every phrase.

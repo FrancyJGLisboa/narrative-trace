@@ -3,7 +3,7 @@ import json
 import os
 import urllib.request
 
-from . import cli_llm, store
+from . import cli_llm, lessons, store
 from .chunker import build_scenes
 from .render import render_story
 from .schema import truncate
@@ -152,6 +152,7 @@ def narrate_turn(d, turn, call=None):
         keep = {(r["turn"], r["n"], tuple(r["seqs"])): r for r in existing}
         others = [r for r in existing if r.get("turn") != turn]
         rows, prev = [], ""
+        seen = {k for r in others if r.get("turn", 0) < turn for k in r.get("lesson_keys") or []}
         for s in scenes:
             key = (turn, s["n"], tuple(s["seqs"]))
             if key in keep:
@@ -161,9 +162,11 @@ def narrate_turn(d, turn, call=None):
                     text, src = llm_scene(s, prev, lg, call)
                 else:
                     text, src = template_scene(s, lg), "template"
+                note, keys = lessons.lesson_for(s, seen, lg)
                 row = {"turn": turn, "n": s["n"], "phase": s["phase"],
                        "title": title(s["phase"], lg), "text": text,
-                       "seqs": s["seqs"], "source": src}
+                       "seqs": s["seqs"], "source": src, "lesson": note, "lesson_keys": keys}
+            seen.update(row.get("lesson_keys") or [])
             rows.append(row)
             prev = row["text"]
         all_rows = sorted(others + rows, key=lambda r: (r["turn"], r["n"]))

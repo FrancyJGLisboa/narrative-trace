@@ -24,6 +24,8 @@ def render_story(d):
             lines += ["## Turn %s" % turn, ""]
         lines.append("**Scene %s: %s**" % (r.get("n"), r.get("title")))
         lines.append(r.get("text", ""))
+        if r.get("lesson"):
+            lines.append("> " + r["lesson"])
         lines.append("<sub>events %s</sub>" % _span(r.get("seqs") or []))
         lines.append("")
     tmp = os.path.join(d, "story.md.tmp")
