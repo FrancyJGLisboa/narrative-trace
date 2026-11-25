@@ -32,6 +32,8 @@ T = {
         "closing": "Terminei este turno.",
         "other": "Executei: {targets}.",
         "reason": ' O motivo que registrei: "{reason}"',
+        "swap": ' Em {file}, troquei "{before}" por "{after}".',
+        "new": ' Em {file}, escrevi: "{after}".',
     },
     "en": {
         "mission": 'You asked me: "{prompt}". I started working on it.',
@@ -44,17 +46,20 @@ T = {
         "closing": "I finished this turn.",
         "other": "I did: {targets}.",
         "reason": ' The reason I recorded: "{reason}"',
+        "swap": ' In {file}, I replaced "{before}" with "{after}".',
+        "new": ' In {file}, I wrote: "{after}".',
     },
 }
 
 SYSTEM = """You are the AI agent that performed the actions below. Narrate your own work to the human, in first person, in {LANG}.
 Write ONE scene: 1 to 4 sentences of plain prose. No headings, no lists, no markdown.
 Rules:
-1. Use only the FACTS, TARGETS, REASONS, PROMPT and FINAL given. Add no other facts.
+1. Use only the FACTS, TARGETS, CHANGES, REASONS, PROMPT and FINAL given. Add no other facts.
 2. Write every file name, command and identifier exactly as given.
 3. If REASONS is empty, do not explain why you did anything. Say only what happened.
 4. Do not invent emotions or physical sensations. A setback is described as what failed and where.
 5. Do not mention events that are not listed.
+6. If CHANGES is given, say plainly what the code said before and what it says now. Copy the snippets exactly.
 Output only the scene text."""
 
 
@@ -84,6 +89,10 @@ def template_scene(scene, lg="pt"):
     else:
         key = phase if phase in t else "other"
     text = t[key].format(**fill)
+    for c in (scene.get("changes") or [])[:2]:
+        k = "swap" if c.get("before") else "new"
+        text += t[k].format(file=os.path.basename(c.get("target") or "") or "-",
+                            before=c.get("before"), after=c.get("after"))
     if scene.get("reasons"):
         text += t["reason"].format(reason=truncate(scene["reasons"][0].strip(), 300))
     return text
@@ -114,7 +123,7 @@ def llm_scene(scene, prev_text, lg="pt", call=None):
     call = call or http_call
     system = SYSTEM.replace("{LANG}", "English" if lg == "en" else "Brazilian Portuguese")
     payload = {k: scene.get(k) for k in
-               ("phase", "facts", "targets", "reasons", "status", "prompt", "final")}
+               ("phase", "facts", "targets", "changes", "reasons", "status", "prompt", "final")}
     payload["previous_scene_text"] = prev_text or ""
     user = json.dumps(payload, ensure_ascii=False)
     try:

@@ -6,7 +6,7 @@ MAX_EVENTS = 8
 
 def _scene(turn, phase):
     return {"turn": turn, "n": 0, "phase": phase, "seqs": [], "facts": [], "targets": [],
-            "reasons": [], "status": "ok", "prompt": None, "final": None}
+            "reasons": [], "status": "ok", "prompt": None, "final": None, "changes": []}
 
 
 def _add(scene, ev):
@@ -16,6 +16,8 @@ def _add(scene, ev):
     t = ev.get("target")
     if t and t not in scene["targets"]:
         scene["targets"].append(t)
+    if ev.get("change"):
+        scene["changes"].append(dict(ev["change"], target=t))
     if ev.get("status") == "error":
         scene["status"] = "error"
 

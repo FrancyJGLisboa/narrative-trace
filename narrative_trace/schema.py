@@ -105,8 +105,34 @@ def extract_target(tool_input):
     return None
 
 
+def extract_change(tool_input):
+    """Return {"before": str|None, "after": str} for edit-like tools, else None."""
+    if not isinstance(tool_input, dict):
+        return None
+    edits = tool_input.get("edits")
+    src = edits[0] if isinstance(edits, list) and edits and isinstance(edits[0], dict) else tool_input
+    old = pick(src, "old_string", "oldString", "old_str", "old_text")
+    new = pick(src, "new_string", "newString", "new_str", "new_text")
+    if isinstance(new, str):
+        return {"before": old if isinstance(old, str) and old else None, "after": new}
+    body = pick(tool_input, "content", "file_text", "fileText")
+    if isinstance(body, str) and extract_target(tool_input):
+        return {"before": None, "after": body}
+    return None
+
+
+def _clip_change(change):
+    if not change:
+        return None
+    out = {}
+    for k in ("before", "after"):
+        v = change.get(k)
+        out[k] = truncate(redact(" ".join(v.split())), 160) if isinstance(v, str) else None
+    return out if out["after"] is not None else None
+
+
 def make_event(kind, harness, session, tool=None, target=None, status=None,
-               error_text=None, text=None):
+               error_text=None, text=None, change=None):
     target = truncate(redact(target), 200)
     if tool and target:
         summary = "%s %s" % (tool, target)
@@ -121,6 +147,7 @@ def make_event(kind, harness, session, tool=None, target=None, status=None,
         "harness": harness, "kind": kind, "tool": tool, "target": target,
         "status": status, "summary": truncate(redact(summary), 300),
         "text": truncate(redact(text), 2000),
+        "change": _clip_change(change),
     }
 
 

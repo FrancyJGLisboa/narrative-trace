@@ -16,6 +16,8 @@ def _corpus(scene):
     parts = list(scene.get("facts") or []) + list(scene.get("targets") or [])
     parts += list(scene.get("reasons") or [])
     parts += [scene.get("prompt") or "", scene.get("final") or ""]
+    for c in scene.get("changes") or []:
+        parts += [c.get("before") or "", c.get("after") or ""]
     return "\n".join(str(p) for p in parts)
 
 

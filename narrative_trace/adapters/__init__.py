@@ -1,7 +1,7 @@
 """Harness adapters: native hook payload -> neutral events."""
 import json
 
-from ..schema import EXIT_RX, as_text, extract_target, is_shell, make_event, pick, truncate
+from ..schema import EXIT_RX, as_text, extract_change, extract_target, is_shell, make_event, pick, truncate
 
 TOOL_NAME = ("tool_name", "toolName", "tool")
 TOOL_INPUT = ("tool_input", "toolInput", "input", "args", "arguments")
@@ -53,14 +53,16 @@ def tool_status(payload, tool=None):
 
 def tool_result(harness, session, payload, tool=None, target=None, force_error=False):
     tool = tool or pick(payload, *TOOL_NAME)
+    tool_input = pick(payload, *TOOL_INPUT)
     if target is None:
-        target = extract_target(pick(payload, *TOOL_INPUT))
+        target = extract_target(tool_input)
     status, err = tool_status(payload, tool)
     if force_error and status != "error":
         status = "error"
         err = as_text(pick(payload, "error", "error_message", *TOOL_OUTPUT)) or "error"
     return make_event("tool_result", harness, session, tool=tool, target=target,
-                      status=status, error_text=err)
+                      status=status, error_text=err,
+                      change=extract_change(tool_input) if status != "error" else None)
 
 
 def turn_start(harness, session, payload):

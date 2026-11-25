@@ -104,6 +104,9 @@ narrative-trace narrate --session-dir .narrative/<id> --all          # rebuild a
 
 ## Known limits
 
+- Scenes quote what an edit changed (before and after, cut to 160 characters, secrets redacted) for Claude Code, Gemini CLI and any harness whose edit payload has old/new strings or file content. Codex patches and Cursor edits show the file name only. The snippets are stored in `trace.jsonl`, which stays on your machine.
+- The LLM narrator may add small claims the events do not hold (for example "that was the only change"). The validator checks file names and reasons, not every phrase.
+
 - Verified live with Claude Code and Codex as narrator (subscription, no key). Copilot CLI and Gemini CLI narrator commands are written from docs and untested. There is no Copilot CLI hook adapter yet.
 - Codex still reads your global `~/.codex/AGENTS.md`, so your own style rules can leak into scenes.
 
