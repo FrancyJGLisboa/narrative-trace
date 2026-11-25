@@ -105,7 +105,7 @@ def llm_enabled():
 def http_call(system, user):
     url = os.environ["NT_LLM_URL"].rstrip("/") + "/chat/completions"
     body = json.dumps({
-        "model": os.environ["NT_LLM_MODEL"], "temperature": 0.2, "max_tokens": 300,
+        "model": os.environ["NT_LLM_MODEL"], "temperature": 0.2, "max_tokens": 2000,
         "messages": [{"role": "system", "content": system},
                      {"role": "user", "content": user}],
     }).encode("utf-8")
@@ -116,6 +116,34 @@ def http_call(system, user):
     with urllib.request.urlopen(req, timeout=20) as r:
         data = json.loads(r.read().decode("utf-8"))
     return data["choices"][0]["message"]["content"]
+
+
+BATCH = 12  # scenes per model call
+SYSTEM_BATCH = (SYSTEM
+                .replace("Write ONE scene: 1 to 4 sentences of plain prose.",
+                         "Write one scene for each item of SCENES, in order. Each scene is 1 to 4 sentences of plain prose.")
+                .replace("Output only the scene text.",
+                         "Output only a JSON array of strings, one per scene, in the same order. No other text."))
+
+
+def llm_batch(scenes, prev_text, lg="pt", call=None):
+    """One model call for many scenes. Return {scene n: text}. Never raises."""
+    call = call or http_call
+    out = {}
+    system = SYSTEM_BATCH.replace("{LANG}", "English" if lg == "en" else "Brazilian Portuguese")
+    for i in range(0, len(scenes), BATCH):
+        part = scenes[i:i + BATCH]
+        keys = ("n", "phase", "facts", "targets", "changes", "reasons", "status", "prompt", "final")
+        user = json.dumps({"scenes": [{k: s.get(k) for k in keys} for s in part],
+                           "previous_scene_text": prev_text or ""}, ensure_ascii=False)
+        try:
+            raw = call(system, user) or ""
+            arr = json.loads(raw[raw.index("["):raw.rindex("]") + 1])
+            if isinstance(arr, list) and len(arr) == len(part):
+                out.update({s["n"]: t for s, t in zip(part, arr) if isinstance(t, str)})
+        except Exception:
+            pass
+    return out
 
 
 def llm_scene(scene, prev_text, lg="pt", call=None):
@@ -152,6 +180,10 @@ def narrate_turn(d, turn, call=None):
         keep = {(r["turn"], r["n"], tuple(r["seqs"])): r for r in existing}
         others = [r for r in existing if r.get("turn") != turn]
         rows, prev = [], ""
+        batch = {}
+        if llm_enabled() or call is not None:
+            todo = [s for s in scenes if (turn, s["n"], tuple(s["seqs"])) not in keep]
+            batch = llm_batch(todo, "", lg, call) if todo else {}
         seen = {k for r in others if r.get("turn", 0) < turn for k in r.get("lesson_keys") or []}
         for s in scenes:
             key = (turn, s["n"], tuple(s["seqs"]))
@@ -159,7 +191,11 @@ def narrate_turn(d, turn, call=None):
                 row = keep[key]
             else:
                 if llm_enabled() or call is not None:
-                    text, src = llm_scene(s, prev, lg, call)
+                    text = batch.get(s["n"])
+                    if text and validate_scene(text.strip(), s, lg)[0]:
+                        text, src = text.strip(), "llm"
+                    else:  # batch gave nothing usable for this scene: ask for it alone
+                        text, src = llm_scene(s, prev, lg, call)
                 else:
                     text, src = template_scene(s, lg), "template"
                 note, keys = lessons.lesson_for(s, seen, lg)

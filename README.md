@@ -82,6 +82,7 @@ harness hooks ──> adapter ──> trace.jsonl ──> scene chunker ──> 
    export NT_LLM_CMD="my-cli --flag"   # any command: prompt on stdin, scene text on stdout
    ```
 
+   One model call narrates a whole turn (up to 12 scenes per call). A scene the model gets wrong is asked again alone, and then falls back to the template.
    The narrator runs in the background after your turn, in a neutral folder, with a guard variable so its own
    hooks stay silent. It uses a little of your subscription per scene. If you do have an endpoint, the
    OpenAI-compatible mode still works (`NT_LLM_URL`, `NT_LLM_MODEL`, `NT_LLM_KEY`).
