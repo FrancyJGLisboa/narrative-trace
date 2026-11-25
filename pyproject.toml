@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "narrative-trace"
+version = "0.1.0"
+description = "First-person, chronological scene narration of what your AI coding agent did, for any harness."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Francy Junio Gonçalves Lisboa"}]
+keywords = ["ai-agents", "claude-code", "codex", "gemini-cli", "cursor", "hooks", "observability"]
+dependencies = []
+
+[project.scripts]
+narrative-trace = "narrative_trace.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/FrancyJGLisboa/narrative-trace"
+
+[tool.setuptools]
+packages = ["narrative_trace", "narrative_trace.adapters"]
+
+[tool.setuptools.package-data]
+narrative_trace = ["examples/*/*.jsonl"]
