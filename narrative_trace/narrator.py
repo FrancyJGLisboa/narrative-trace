@@ -3,7 +3,7 @@ import json
 import os
 import urllib.request
 
-from . import store
+from . import cli_llm, store
 from .chunker import build_scenes
 from .render import render_story
 from .schema import truncate
@@ -90,7 +90,7 @@ def template_scene(scene, lg="pt"):
 
 
 def llm_enabled():
-    return bool(os.environ.get("NT_LLM_URL") and os.environ.get("NT_LLM_MODEL"))
+    return bool(os.environ.get("NT_LLM_URL") and os.environ.get("NT_LLM_MODEL")) or cli_llm.enabled()
 
 
 def http_call(system, user):
@@ -135,6 +135,8 @@ def narrate_turn(d, turn, call=None):
     if not events:
         return []
     scenes = build_scenes(events)
+    if call is None and not os.environ.get("NT_LLM_URL") and cli_llm.enabled():
+        call = cli_llm.make_call(events[0].get("harness"))
     path = os.path.join(d, "scenes.jsonl")
     with store.session_lock(d, timeout=30):
         existing = store.read_jsonl(path)

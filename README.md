@@ -73,14 +73,18 @@ harness hooks ──> adapter ──> trace.jsonl ──> scene chunker ──> 
 3. **No invented motives.** The agent's reasons come from its own words where the harness exposes them
    (Claude Code transcript, Cursor responses, the final message in Codex and Gemini CLI). If no reason was
    recorded, the scene says only what happened.
-4. **Works without any LLM.** The default narrator is a deterministic template. Turn on an LLM narrator
-   with any OpenAI-compatible endpoint (local or hosted):
+4. **Works without any LLM, and without an API key.** The default narrator is a deterministic template.
+   To get prose from the model you already pay for, point it at your subscription CLI:
 
    ```sh
-   export NT_LLM_URL=http://localhost:11434/v1   # e.g. Ollama, LM Studio, OpenAI, OpenRouter
-   export NT_LLM_MODEL=llama3.1
-   export NT_LLM_KEY=...                          # if the server needs one
+   export NT_LLM=auto        # uses the CLI of the harness you are in (claude, codex, ...)
+   export NT_LLM=claude      # or: codex | copilot | gemini   (copilot and gemini are not yet verified)
+   export NT_LLM_CMD="my-cli --flag"   # any command: prompt on stdin, scene text on stdout
    ```
+
+   The narrator runs in the background after your turn, in a neutral folder, with a guard variable so its own
+   hooks stay silent. It uses a little of your subscription per scene. If you do have an endpoint, the
+   OpenAI-compatible mode still works (`NT_LLM_URL`, `NT_LLM_MODEL`, `NT_LLM_KEY`).
 
    Every LLM scene goes through a validator that rejects file names not in the events, explanations
    without a recorded reason, and list formatting. Two rejections fall back to the template.
@@ -99,6 +103,9 @@ narrative-trace narrate --session-dir .narrative/<id> --all          # rebuild a
 (From a clone, `python ntrace.py ...` works the same.)
 
 ## Known limits
+
+- Verified live with Claude Code and Codex as narrator (subscription, no key). Copilot CLI and Gemini CLI narrator commands are written from docs and untested. There is no Copilot CLI hook adapter yet.
+- Codex still reads your global `~/.codex/AGENTS.md`, so your own style rules can leak into scenes.
 
 - How much "why" you get depends on the harness: full in Claude Code (transcript), per response in
   Cursor, final message only in Codex and Gemini CLI.

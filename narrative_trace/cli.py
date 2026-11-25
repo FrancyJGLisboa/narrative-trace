@@ -34,6 +34,8 @@ def _spawn_narrator(d, turn):
 
 def cmd_hook(a):
     d = None
+    if os.environ.get("NT_NARRATING"):  # we are inside the narrator's own CLI call: stay silent
+        return 0
     try:
         from .adapters import get_adapter
         raw = sys.stdin.read() if not sys.stdin.isatty() else ""
