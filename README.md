@@ -109,6 +109,15 @@ For people who are new to code, a scene can carry a line `> Para entender: ...` 
 
 At the end of each finished turn, `story.md` adds up to 3 self-check questions ("Check that you understood") built from the events: what was replaced, whether the check passed, what a concept means. The answer sits in a collapsed block. `quiz.jsonl` holds them.
 
+## Practice: confidence and score
+
+```sh
+narrative-trace quiz            # answer the open questions of the latest session
+narrative-trace quiz --report   # see where you were sure and wrong
+```
+
+For each question you say how sure you are (1 guess, 2 maybe, 3 sure), write your answer, then see the right one and say if you got it. Each answer goes to `.narrative/scores.jsonl`. The report shows the hit rate per confidence level, the questions you got wrong while sure (3), and which topics are learned (2 correct in a row). Reading rule: at confidence 3 the hit rate should be high. If it is not, the misconception is hidden there. The grading is by you, not automatic, and the answers are kept only on your machine.
+
 ## Memory across sessions
 
 A note appears once per project, not once per session. The concepts you already met are kept in `.narrative/concepts.json`, next to the session folders. A later session skips them. Rebuilding an old session still gives the same story, because only concepts taught in an earlier session count as known. Delete `concepts.json` to start over.

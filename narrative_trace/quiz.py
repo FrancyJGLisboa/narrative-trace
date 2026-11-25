@@ -50,12 +50,12 @@ def build_quiz(scenes, rows, lg="pt"):
         c = next((c for c in s.get("changes") or [] if c.get("before")), None)
         if c:
             items.append((t["swap_q"].format(file=_name(c.get("target"))),
-                          t["swap_a"].format(before=c["before"], after=c["after"])))
+                          t["swap_a"].format(before=c["before"], after=c["after"]), "swap"))
             break
     else:
         for s in scenes:
             for c in s.get("changes") or []:
-                items.append((t["new_q"], t["new_a"].format(file=_name(c.get("target")), after=c["after"])))
+                items.append((t["new_q"], t["new_a"].format(file=_name(c.get("target")), after=c["after"]), "new_file"))
                 break
             if items:
                 break
@@ -63,14 +63,14 @@ def build_quiz(scenes, rows, lg="pt"):
     if verify:
         last = verify[-1]
         ans = t["fail"].format(fact=(last.get("facts") or ["?"])[0]) if last["status"] == "error" else t["pass"]
-        items.append((t["verify_q"], ans))
+        items.append((t["verify_q"], ans, "verify"))
     else:
         bad = [s for s in scenes if s["phase"] == "setback"]
         if bad:
-            items.append((t["setback_q"], (bad[0].get("facts") or ["?"])[0]))
+            items.append((t["setback_q"], (bad[0].get("facts") or ["?"])[0], "setback"))
     for r in rows:
         for k in r.get("lesson_keys") or []:
-            items.append((CONCEPT_Q[k][1 if lg == "en" else 0], GLOSSARY[k][1 if lg == "en" else 0]))
+            items.append((CONCEPT_Q[k][1 if lg == "en" else 0], GLOSSARY[k][1 if lg == "en" else 0], "concept:" + k))
             return items[:MAX_ITEMS]
     return items[:MAX_ITEMS]
 

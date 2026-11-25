@@ -111,6 +111,17 @@ def cmd_uninstall(a):
     return 0
 
 
+def cmd_quiz(a):
+    from . import scorebook
+    d = a.session_dir or scorebook.latest_session(
+        os.environ.get("NT_HOME") or os.path.join(os.getcwd(), ".narrative"))
+    if not d:
+        print("No quiz found. Finish a turn first, or pass --session-dir.")
+        return 1
+    scorebook.report(d) if a.report else scorebook.practice(d)
+    return 0
+
+
 def cmd_demo(a):
     from .demo import run_demo
     print(run_demo(a.harness, a.out))
@@ -137,6 +148,9 @@ def main(argv=None):
         i.add_argument("--scope", choices=("project", "user"), default="project")
         if name == "install":
             i.add_argument("--dry-run", action="store_true")
+    qz = sub.add_parser("quiz", help="answer the self-check questions, log confidence, see weak spots")
+    qz.add_argument("--session-dir")
+    qz.add_argument("--report", action="store_true")
     dm = sub.add_parser("demo", help="replay a bundled example session and narrate it")
     dm.add_argument("--harness", default="claude_code")
     dm.add_argument("--out", default="narrative-demo")
@@ -145,7 +159,7 @@ def main(argv=None):
         p.print_help()
         return 0
     fn = {"hook": cmd_hook, "narrate": cmd_narrate, "install": cmd_install,
-          "uninstall": cmd_uninstall, "demo": cmd_demo}[a.cmd]
+          "uninstall": cmd_uninstall, "demo": cmd_demo, "quiz": cmd_quiz}[a.cmd]
     rc = fn(a)
     if a.cmd == "hook":
         sys.exit(0)

@@ -225,7 +225,7 @@ def _save_quiz(d, turn, scenes, rows, lg, finished):
     old = [r for r in store.read_jsonl(path) if r.get("turn") != turn]
     items = quiz.build_quiz(scenes, rows, lg) if finished else []
     if items:
-        old.append({"turn": turn, "items": [{"q": q, "a": a} for q, a in items], "lang": lg})
+        old.append({"turn": turn, "items": [{"q": q, "a": a, "kind": k} for q, a, k in items], "lang": lg})
     with open(path + ".tmp", "w", encoding="utf-8") as f:
         for r in sorted(old, key=lambda r: r["turn"]):
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
